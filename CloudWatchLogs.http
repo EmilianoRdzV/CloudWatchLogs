@@ -1,0 +1,6 @@
+@CloudWatchLogs_HostAddress = http://localhost:5161
+
+GET {{CloudWatchLogs_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
