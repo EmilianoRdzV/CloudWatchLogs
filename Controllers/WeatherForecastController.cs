@@ -21,22 +21,10 @@ namespace CloudWatchLogs.Controllers
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public async Task<IEnumerable<WeatherForecast>> GetAsync()
+        public async Task<IEnumerable<WeatherForecast>> GetAsync(string cityName)
         {
-            var logClient = new AmazonCloudWatchLogsClient();
-            var logGroupName = "/aws/weather-forecast-appEmi";
-            var logStreamName = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
-            await logClient.CreateLogGroupAsync(new CreateLogGroupRequest(logGroupName));
-            await logClient.CreateLogStreamAsync(new CreateLogStreamRequest(logGroupName,logStreamName));
-            await logClient.PutLogEventsAsync(new PutLogEventsRequest()
-            {
-                LogGroupName = logGroupName,
-                LogStreamName = logStreamName,
-                LogEvents = new List<InputLogEvent>()
-                {
-                    new() {Message = "Get WWeather Forecast called", Timestamp = DateTime.UtcNow}
-                }
-            });
+            _logger.LogInformation($"Get Weather Forecast called for city {cityName}");
+            //await LogUsingClient(cityName);
 
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
@@ -45,6 +33,30 @@ namespace CloudWatchLogs.Controllers
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             })
             .ToArray();
+        }
+
+        private static async Task LogUsingClient(string cityName)
+        {
+            var logClient = new AmazonCloudWatchLogsClient();
+            var logGroupName = "/aws/weather-forecast-appEmi";
+            var logStreamName = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
+            var existing = await logClient.DescribeLogGroupsAsync(new DescribeLogGroupsRequest()
+            { LogGroupNamePrefix = logGroupName });
+            var logGroupExist = existing.LogGroups.Any(l => l.LogGroupName == logGroupName);
+            if (!logGroupExist)
+                await logClient.CreateLogGroupAsync(new CreateLogGroupRequest(logGroupName));
+
+
+            await logClient.CreateLogStreamAsync(new CreateLogStreamRequest(logGroupName, logStreamName));
+            await logClient.PutLogEventsAsync(new PutLogEventsRequest()
+            {
+                LogGroupName = logGroupName,
+                LogStreamName = logStreamName,
+                LogEvents = new List<InputLogEvent>()
+                {
+                    new() {Message = $"Get Weather Forecast called for city {cityName}", Timestamp = DateTime.UtcNow}
+                }
+            });
         }
     }
 }
