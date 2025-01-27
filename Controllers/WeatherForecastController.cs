@@ -23,10 +23,11 @@ namespace CloudWatchLogs.Controllers
         [HttpGet(Name = "GetWeatherForecast")]
         public async Task<IEnumerable<WeatherForecast>> GetAsync(string cityName)
         {
-            _logger.LogInformation($"Get Weather Forecast called for city {cityName}");
+            var count = Random.Shared.Next(5, 15);
+            _logger.LogInformation("Get Weather Forecast called for city {cityName} with count of {count}", cityName, count );
             //await LogUsingClient(cityName);
 
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            return Enumerable.Range(1, count).Select(index => new WeatherForecast
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
                 TemperatureC = Random.Shared.Next(-20, 55),
